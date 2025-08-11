@@ -14,7 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum UserStatus {
   ACTIVE
   INACTIVE
@@ -26,35 +25,152 @@ enum LoginType {
   facebook
 }
 
-model User {
-  id           String     @id @default(uuid())
-  name         String
-  email        String     @unique
-  status       UserStatus
-  avatarUrl    String?    @map("avatar_url")
-  loginType    LoginType  @map("login_type")
-  providerId   String    @map("provider_id")@unique
+enum ContentType {
+  Movie
+  Series
+}
 
-  transitions Transition[] 
+enum ContentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  id         String     @id @default(uuid())
+  name       String
+  email      String     @unique
+  status     UserStatus
+  avatarUrl  String?    @map("avatar_url")
+  loginType  LoginType  @map("login_type")
+  providerId String     @unique @map("provider_id")
+
+  transitions   Transition[]
   refreshTokens RefreshToken[]
 }
 
 model RefreshToken {
-  id          String   @id @default(uuid())
-  token       String   @unique
-  userId      String
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
-  
-  user        User     @relation(fields: [userId], references: [id])
-}
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 
+  user User @relation(fields: [userId], references: [id])
+}
 
 model Transition {
-  id          String   @id @default(uuid())
-  expireDate  DateTime
-  userId      String
-  createdAt   DateTime
+  id         String   @id @default(uuid())
+  expireDate DateTime
+  userId     String
+  createdAt  DateTime
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
+
+model Content {
+  id            String        @id @default(uuid())
+  titleMm       String
+  titleEn       String
+  descriptionMm String
+  descriptionEn String
+  duration      Int
+  videoUrl      String
+  trailerUrl    String
+  portraitUrl   String
+  landscapeUrl  String
+  releaseDate   DateTime
+  type          ContentType
+  status        ContentStatus
+  isPremium     Boolean
+  createdAt     DateTime      @default(now())
+
+  genres        content_genres[]
+  watch_histroy watch_histroy[]
+  favorites     favorites[]
+  banner        banner_slider[]
+  content_playlist content_playlist[]
+}
+
+model genres {
+  id   String @id @default(uuid())
+  name String
+
+  content_genres content_genres[]
+}
+
+model content_genres {
+  contentId String
+  genreId String
+
+  content  Content  @relation(fields: [contentId], references: [id])
+  genre    genres   @relation(fields: [genreId], references: [id])
+
+  @@id([contentId, genreId])
+}
+
+model watch_histroy {
+  id        String   @id @default(uuid())
+  userId    String
+  movieId   String
+  watchedAt DateTime
+  progress  Int
+
+  @@index([userId])
+  @@index([movieId])
+
+
+  content  Content @relation(fields: [movieId], references: [id])
+}
+
+model favorites {
+  movieId String
+  userId  String
+
+  @@id([movieId, userId])
+
+  content Content @relation(fields: [movieId], references: [id])
+}
+
+
+enum AdType {
+  Content
+  Web
+}
+
+model banner_slider {
+  id        String   @id @default(uuid())
+  name      String
+  imageUrl  String
+  contentId String?  // nullable
+  webUrl    String?  // nullable
+  status    Boolean
+  adType    AdType
+  sequence  Int
+
+  content Content? @relation(fields: [contentId], references: [id])
+}
+
+model play_list {
+  id       String      @id @default(uuid())
+  titleMm  String
+  titleEn  String
+  status   Boolean
+  type     ContentType
+  sequence Int
+
+  content_playlist content_playlist[]
+}
+
+model content_playlist {
+  id         String    @id @default(uuid())
+  playListId String
+  contentId  String
+  sequence   Int
+
+  // Relations
+  play_list  play_list @relation(fields: [playListId], references: [id])
+  content    Content   @relation(fields: [contentId], references: [id])
+
+  @@unique([playListId, contentId])
+}
+
