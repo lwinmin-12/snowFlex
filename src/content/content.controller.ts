@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { ContentService } from './content.service';
 import { ContentDto } from './dto/Content.dto';
 
@@ -7,13 +16,14 @@ export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Post()
-  create(@Body() createContentDto:  Omit<ContentDto, 'id'>) {
+  create(@Body() createContentDto: Omit<ContentDto, 'id'>) {
+    console.log(createContentDto);
     return this.contentService.create(createContentDto);
   }
 
   @Get()
-  findAll(@Param() params: { page?: number, pageSize?: number }) {
-    return this.contentService.findAll(params.page, params.pageSize);
+  findAll(@Query('page') page?: number, @Query('pageSize') pageSize?: number) {
+    return this.contentService.findAll(page, pageSize);
   }
 
   @Get(':id')
@@ -22,7 +32,10 @@ export class ContentController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateContentDto:   Omit<ContentDto, 'id'>) {
+  update(
+    @Param('id') id: string,
+    @Body() updateContentDto: Omit<ContentDto, 'id'>,
+  ) {
     return this.contentService.update(id, updateContentDto);
   }
 

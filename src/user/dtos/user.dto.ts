@@ -20,4 +20,9 @@ export type UserDto = {
   providerId: string;
 };
 
+export interface RequestWithUser extends Request {
+    user: UserDto;
+}
+
+
 export type CreateUserType = Omit<UserDto, 'id'> 

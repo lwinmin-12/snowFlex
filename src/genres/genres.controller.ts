@@ -6,9 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { GenresService } from './genres.service';
-import { GenreDto } from './dto/genre.dto';
+import { GenreDto } from './dto/genres.dto';
+import { ResGenresDto } from './dto/resGenres.dto';
 
 @Controller('genres')
 export class GenresController {
@@ -20,22 +23,30 @@ export class GenresController {
   }
 
   @Get()
-  findAll(): Promise<GenreDto[]> {
-    return this.genresService.listGenres();
+  findAll(
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
+  ): Promise<ResGenresDto> {
+    const currentPage = page ? Number(page) : 1;
+    const currentPageSize = pageSize ? Number(pageSize) : 20;
+    return this.genresService.listGenres(currentPage, currentPageSize);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<GenreDto | null> {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<GenreDto | null> {
     return this.genresService.getGenreById(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGenreDto: Omit<GenreDto, 'id'>): Promise<GenreDto | null> {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateGenreDto: Omit<GenreDto, 'id'>,
+  ): Promise<GenreDto | null> {
     return this.genresService.updateGenre(id, updateGenreDto.name);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<GenreDto | null> {
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<GenreDto | null> {
     return this.genresService.deleteGenre(id);
   }
 }

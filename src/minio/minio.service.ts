@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 
 @Injectable()
 export class MinioService {
   private s3: S3Client;
-  private bucketName = process.env.S3_BANNER_BUCKET; // You can change bucket name
+  private bucketName = process.env.S3_BANNER_BUCKET;
 
   constructor() {
     const accessKeyId = process.env.S3_ACCESS_KEY ?? '';
@@ -38,6 +38,17 @@ export class MinioService {
         ContentType: file.mimetype,
       }),
     );
-    return `${process.env.S3_ENDPOINT}/${this.bucketName}/${key}`;
+    return `/${this.bucketName}/${key}`;
+  }
+
+
+  async deleteFile(key: string) {
+    await this.s3.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      }),
+    );
+    return { success: true, message: `File ${key} deleted successfully` };
   }
 }
